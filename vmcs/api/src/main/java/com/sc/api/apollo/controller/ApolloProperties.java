@@ -5,6 +5,7 @@ import com.sc.core.pub.PubConfig;
 import com.sc.util.code.EnumReturnCode;
 import com.sc.util.json.JsonResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,6 +22,7 @@ public class ApolloProperties {
     private PubConfig pubConfig;
 
     @RequestMapping("/get")
+    @PreAuthorize("hasAuthority('admin')")
     public JsonResult get() {
         return new JsonResult(EnumReturnCode.SUCCESS_INFO_GET, pubConfig.getImageServer());
     }

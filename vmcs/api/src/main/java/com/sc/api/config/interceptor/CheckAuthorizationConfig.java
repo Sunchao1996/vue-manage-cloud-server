@@ -35,28 +35,33 @@ public class CheckAuthorizationConfig extends WebMvcConfigurerAdapter {
         // addPathPatterns 用于添加拦截规则
         // excludePathPatterns 用户排除拦截
         //判断是否带X-Token
-        registry.addInterceptor(checkVersionInterceptor())
-                .excludePathPatterns("/login/login")
-                .excludePathPatterns("/apollo/*")
-                .addPathPatterns("/*")
-                .addPathPatterns("/*/*")
-                .addPathPatterns("/*/*/*")
-        ;
-
-        registry.addInterceptor(new CheckAuthorizationInterceptor(sysUserService(), sysLogService()))
-                .addPathPatterns("/*")
-                .addPathPatterns("/*/*")
-                .addPathPatterns("/*/*/*")
-                .excludePathPatterns("/login/login")
-                .excludePathPatterns("/apollo/*")
-        ;
-
-        //记录日志
-        registry.addInterceptor(new LogRequestInterceptor()).addPathPatterns("/*")
-                .excludePathPatterns("/apollo/*")
-                .addPathPatterns("/*")
-                .addPathPatterns("/*/*")
-                .addPathPatterns("/*/*/*");
+//        registry.addInterceptor(checkVersionInterceptor())
+//                .excludePathPatterns("/login/login")
+//                .excludePathPatterns("/apollo/*")
+//                .excludePathPatterns("/security/*")
+//                .excludePathPatterns("/oauth/*")
+//                .addPathPatterns("/*")
+//                .addPathPatterns("/*/*")
+//                .addPathPatterns("/*/*/*")
+//        ;
+//
+//        registry.addInterceptor(new CheckAuthorizationInterceptor(sysUserService(), sysLogService()))
+//                .addPathPatterns("/*")
+//                .addPathPatterns("/*/*")
+//                .addPathPatterns("/*/*/*")
+//                .excludePathPatterns("/login/login")
+//                .excludePathPatterns("/oauth/*")
+//                .excludePathPatterns("/apollo/*")
+//                .excludePathPatterns("/security/*")
+//        ;
+//
+//        //记录日志
+//        registry.addInterceptor(new LogRequestInterceptor()).addPathPatterns("/*")
+//                .excludePathPatterns("/apollo/*")
+//                .excludePathPatterns("/oauth/*")
+//                .addPathPatterns("/*")
+//                .addPathPatterns("/*/*")
+//                .addPathPatterns("/*/*/*");
         super.addInterceptors(registry);
     }
 }
