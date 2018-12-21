@@ -3,6 +3,7 @@ package com.sc.sys.model;
 import com.sc.sys.dao.SysRoleDao;
 import org.hibernate.validator.constraints.NotBlank;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -10,7 +11,7 @@ import java.util.Date;
  *
  * @author 孙超 created on 2018/11/8
  */
-public class SysRole {
+public class SysRole implements Serializable{
     private Integer id;
     private String roleName;
     @NotBlank

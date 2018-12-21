@@ -1,9 +1,12 @@
 package com.sc.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -28,6 +31,10 @@ public class ApiOAuthConfig {
         private AuthenticationManager authenticationManager;
         @Autowired
         private RedisConnectionFactory redisConnectionFactory;
+        @Bean
+        public PasswordEncoder passwordEncoder(){
+            return new BCryptPasswordEncoder();
+        }
 
         @Override
         public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
@@ -39,13 +46,15 @@ public class ApiOAuthConfig {
         public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
             clients.inMemory().withClient("client")
                     .authorizedGrantTypes("password", "refresh_token").scopes("all").authorities("client")
-                    .secret("{bcrypt}$2a$10$FkNUXz8C1zH/rjPYLeYh8OwsoGobZR74DoqiVQL4o2vHNlFz6uxuC");
+                    .secret(passwordEncoder().encode("123456"));
         }
 
         @Override
         public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+            ApiRedisTokenStore apiRedisTokenStore = new ApiRedisTokenStore(redisConnectionFactory);
+            apiRedisTokenStore.setPrefix("authserver:oauth:");
             endpoints.authenticationManager(authenticationManager)
-                    .tokenStore(new ApiRedisTokenStore(redisConnectionFactory));
+                    .tokenStore(apiRedisTokenStore);
         }
     }
 }

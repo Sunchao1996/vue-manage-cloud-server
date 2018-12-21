@@ -5,6 +5,7 @@ import com.sc.sys.dao.SysUserRoleDao;
 import com.sc.sys.model.SysRole;
 import com.sc.sys.model.SysUser;
 import com.sc.sys.model.SysUsersRoles;
+import com.sc.util.session.WebSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -37,11 +38,6 @@ public class SysUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException(userName + "not found");
         }
         List<SysRole> roleList = sysUserRoleDao.listRolesByUserId(sysUser.getId());
-        Collection<GrantedAuthority> grantedAuthorities = new ArrayList<>();
-        for (SysRole sysRole : roleList) {
-            GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(sysRole.getRoleCode());
-            grantedAuthorities.add(grantedAuthority);
-        }
-        return new User(sysUser.getUserName(), sysUser.getUserPassword(), grantedAuthorities);
+        return new WebSession(sysUser.getUserName(), sysUser.getUserPassword(), roleList);
     }
 }

@@ -1,6 +1,7 @@
 package com.sc.config;
 
 import com.sc.sys.service.SysUserDetailsService;
+import com.sc.util.session.WebSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.DisabledException;
@@ -9,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -22,14 +24,17 @@ import java.util.Collection;
 public class ApiAuthenticationProvider implements AuthenticationProvider {
     @Autowired
     private SysUserDetailsService sysUserDetailsService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
+    //Principal是一个包含用户的标识和用户的所属角色的对象
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
         String password = (String) authentication.getCredentials();
-        UserDetails user = sysUserDetailsService.loadUserByUsername(username);
 
-        if (!user.getPassword().equals(password)) {
+        UserDetails user = sysUserDetailsService.loadUserByUsername(username);
+        if (!passwordEncoder.matches(password,user.getPassword())) {
             throw new DisabledException("Wrong password.");
         }
 

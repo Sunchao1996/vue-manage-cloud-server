@@ -31,7 +31,9 @@ public class ApiOAuthConfig {
 
         @Override
         public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
-            resources.tokenStore(new RedisTokenStore(redisConnectionFactory)).resourceId("manage").stateless(true);
+            ApiRedisTokenStore apiRedisTokenStore = new ApiRedisTokenStore(redisConnectionFactory);
+            apiRedisTokenStore.setPrefix("authserver:oauth:");
+            resources.tokenStore(apiRedisTokenStore).resourceId("manage").stateless(true);
         }
 //
 ////        @Override

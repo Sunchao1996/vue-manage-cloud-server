@@ -1,10 +1,17 @@
 package com.sc.util.session;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sc.sys.model.SysRole;
 import jdk.nashorn.internal.ir.annotations.Ignore;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * web用户Session信息 该类可以根据实际信息进行修改
@@ -12,7 +19,7 @@ import java.util.Arrays;
  * @author 孔垂云
  * @date 2017-05-23
  */
-public class WebSession implements Serializable {
+public class WebSession implements Serializable, UserDetails {
     private String user;
     private String status;
     private String token;
@@ -23,10 +30,33 @@ public class WebSession implements Serializable {
     private String resources;//用@分隔
     private String ip;
     private Integer userId;
+    private String password;
+    private List<SysRole> roleList;
     @JsonIgnore
     private String manageUrl;//用来校验是否允许访问这个请求地址
     private String userRealName;//页面上显示的用户真实姓名
     private String roleName;//页面上显示的用户角色名称用@分隔
+    public WebSession() {
+    }
+    public WebSession(String name, String password, List<SysRole> roleList) {
+        this.name = name;
+        this.password = password;
+        this.roleList = roleList;
+    }
+
+    public List<SysRole> getRoleList() {
+        return roleList;
+    }
+
+    public WebSession setRoleList(List<SysRole> roleList) {
+        this.roleList = roleList;
+        return this;
+    }
+
+    public WebSession setPassword(String password) {
+        this.password = password;
+        return this;
+    }
 
     @Override
     public String toString() {
@@ -162,5 +192,46 @@ public class WebSession implements Serializable {
     public WebSession setManageUrl(String manageUrl) {
         this.manageUrl = manageUrl;
         return this;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        List<SysRole> roleList = this.roleList;
+        Collection<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+        for (SysRole sysRole : roleList) {
+            GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(sysRole.getRoleCode());
+            grantedAuthorities.add(grantedAuthority);
+        }
+        return grantedAuthorities;
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
+
+    @Override
+    public String getUsername() {
+        return null;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return false;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }
