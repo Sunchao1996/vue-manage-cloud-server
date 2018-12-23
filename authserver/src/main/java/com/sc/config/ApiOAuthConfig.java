@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.token.DefaultToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
@@ -15,7 +16,10 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.R
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * what:  OAuth2 Config 资源服务器和授权服务器配置
@@ -46,7 +50,7 @@ public class ApiOAuthConfig {
         public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
             clients.inMemory().withClient("client")
                     .authorizedGrantTypes("password", "refresh_token").scopes("all").authorities("client")
-                    .secret(passwordEncoder().encode("123456"));
+                    .secret(passwordEncoder().encode("123456")).refreshTokenValiditySeconds((int) TimeUnit.HOURS.toSeconds(2));
         }
 
         @Override
@@ -55,6 +59,17 @@ public class ApiOAuthConfig {
             apiRedisTokenStore.setPrefix("authserver:oauth:");
             endpoints.authenticationManager(authenticationManager)
                     .tokenStore(apiRedisTokenStore);
+
+            DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
+            defaultTokenServices.setTokenStore(apiRedisTokenStore);
+            //设置超时时间
+            defaultTokenServices.setAccessTokenValiditySeconds((int) TimeUnit.HOURS.toSeconds(2));
+            defaultTokenServices.setSupportRefreshToken(true);
+            defaultTokenServices.setReuseRefreshToken(false);
+            defaultTokenServices.setClientDetailsService(endpoints.getClientDetailsService());
+            defaultTokenServices.setTokenEnhancer(endpoints.getTokenEnhancer());
+            endpoints.tokenServices(defaultTokenServices);
         }
     }
+
 }

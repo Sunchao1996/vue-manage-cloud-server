@@ -1,11 +1,14 @@
 package com.sc.sys.service;
 
+import com.sc.sys.dao.SysRoleResourceDao;
 import com.sc.sys.dao.SysUserDao;
 import com.sc.sys.dao.SysUserRoleDao;
+import com.sc.sys.model.SysResource;
 import com.sc.sys.model.SysRole;
 import com.sc.sys.model.SysUser;
 import com.sc.sys.model.SysUsersRoles;
 import com.sc.util.session.WebSession;
+import com.sc.util.string.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * what:   自定义UserDetailsService
@@ -32,7 +36,7 @@ public class SysUserDetailsService implements UserDetailsService {
     private SysUserRoleDao sysUserRoleDao;
 
     @Override
-    public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
+    public WebSession loadUserByUsername(String userName) throws UsernameNotFoundException {
         SysUser sysUser = sysUserDao.getByUserName(userName);
         if (sysUser == null) {
             throw new UsernameNotFoundException(userName + "not found");

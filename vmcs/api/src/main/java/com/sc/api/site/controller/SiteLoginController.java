@@ -13,14 +13,29 @@ import com.sc.util.redis.RedisUtil;
 import com.sc.util.session.WebSession;
 import com.sc.util.string.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.common.OAuth2RefreshToken;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.*;
 
 /**
  * Created by 孔垂云 on 2017/9/2.
@@ -31,17 +46,17 @@ import javax.validation.Valid;
 public class SiteLoginController {
     @Autowired
     private SysUserService sysUserService;
-    @Autowired
-    private SiteLoginService siteLoginService;
-    @Autowired
-    private RedisUtil redisUtil;
 
+    @Autowired
+    private TokenStore tokenStore;
+    private RestTemplate restTemplate = new RestTemplate();
     /**
      * 校验登录
      *
      * @param userInfoLoginDto
      * @return
      */
+    @PreAuthorize("permitAll()")
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public JsonResult checkLogin(HttpServletRequest request, @Valid @RequestBody UserInfoLoginDto userInfoLoginDto) {
         boolean flag = false;
@@ -54,9 +69,24 @@ public class SiteLoginController {
             flag = sysUserService.checkPass(sysUser, userInfoLoginDto.getPassword());
         }
         if (flag) {
-            sysUser.setUserIp(StringUtil.getIp(request));//设备id
-            WebSession webSession = siteLoginService.setWebSession(sysUser, request, RedisKey.WEB_TOKEN_TIMEOUT);
-            return new JsonResult(EnumReturnCode.SUCCESS_LOGIN, webSession);
+            //授权请求信息
+            MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+            map.put("client_id", Collections.singletonList("client"));
+            map.put("client_secret", Collections.singletonList("123456"));
+            map.put("username", Collections.singletonList(userInfoLoginDto.getUsername()));
+            map.put("password", Collections.singletonList(userInfoLoginDto.getPassword()));
+            map.put("grant_type",Collections.singletonList("password"));
+            //HttpEntity
+            HttpEntity httpEntity = new HttpEntity(map,null);
+            //获取 Token
+            try {
+                ResponseEntity<OAuth2AccessToken> body = restTemplate.exchange("http://localhost:8080/oauth/token", HttpMethod.POST, httpEntity, OAuth2AccessToken.class);
+                OAuth2AccessToken oAuth2AccessToken = body.getBody();
+                return new JsonResult(EnumReturnCode.SUCCESS_LOGIN, oAuth2AccessToken);
+            }catch(Exception e){
+                e.printStackTrace();
+                return new JsonResult(EnumReturnCode.FAIL_LOGIN_ERROR);
+            }
         } else {
             return new JsonResult(EnumReturnCode.FAIL_LOGIN_ERROR);
         }
@@ -68,8 +98,11 @@ public class SiteLoginController {
      * @return
      */
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
-    public JsonResult checkLogin(HttpServletRequest request) {
-        redisUtil.del(RedisKey.WEBSESSION + request.getHeader("X-Token"));
+    public JsonResult logout() {
+        Authentication authentication =  SecurityContextHolder.getContext().getAuthentication();
+        OAuth2Authentication oAuth2Authentication = (OAuth2Authentication) authentication;
+        OAuth2AccessToken token = tokenStore.getAccessToken( oAuth2Authentication);
+        tokenStore.removeAccessToken(token);
         return new JsonResult(EnumReturnCode.SUCCESS_OPERA);
     }
 }

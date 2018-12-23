@@ -37,15 +37,10 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
         auth.userDetailsService(sysUserDetailsService).passwordEncoder(passwordEncoder());
         auth.authenticationProvider(apiAuthenticationProvider);
     }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.formLogin();
-    }
-
     @Override
     @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
+    
 }

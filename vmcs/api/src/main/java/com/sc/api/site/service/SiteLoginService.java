@@ -25,29 +25,19 @@ import java.util.UUID;
  */
 @Service
 public class SiteLoginService {
-
-    @Autowired
-    private RedisUtil redisUtil;
-    @Autowired
-    private SysUserLoginService sysUserLoginService;
-    @Autowired
-    private SysUserDao sysUserDao;
     @Autowired
     private SysUserRoleDao sysUserRoleDao;
     @Autowired
     private SysRoleResourceDao sysRoleResourceDao;
 
     /**
-     * 给appSession设值
+     * 给webSession设值
      *
      * @param
      * @return
      */
-    public WebSession setWebSession(SysUser sysUser, HttpServletRequest request, int tokenTimeout) {
+    public void setWebSession(SysUser sysUser, WebSession webSession) {
         String uuid = UUID.randomUUID().toString();
-        WebSession webSession = new WebSession();
-//        private String[] roles;
-//        private String resources;//用@分隔
         webSession.setUserId(sysUser.getId());
         webSession.setIp(sysUser.getUserIp());//user_ip
         webSession.setIntroduction(sysUser.getUserIntroduction());
@@ -83,10 +73,5 @@ public class SiteLoginService {
         webSession.setRoles(roles.toString().split("@"));
         webSession.setResources(resources.toString());
         webSession.setManageUrl(manageUrl.toString());
-        redisUtil.set(RedisKey.WEBSESSION + uuid, webSession, tokenTimeout);//把登录的人员信息生成uuid，放入到redis里面，作为token使用
-
-        // 插入登录日志
-        sysUserLoginService.addLoginLog(webSession, request, uuid);
-        return webSession;
     }
 }

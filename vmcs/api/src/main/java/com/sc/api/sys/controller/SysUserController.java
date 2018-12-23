@@ -1,5 +1,6 @@
 package com.sc.api.sys.controller;
 
+import com.sc.api.site.service.SiteLoginService;
 import com.sc.common.page.PageDto;
 import com.sc.sys.model.SysPwd;
 import com.sc.sys.model.SysUser;
@@ -7,10 +8,11 @@ import com.sc.sys.service.SysUserService;
 import com.sc.sys.vo.SysUserSearchVO;
 import com.sc.util.code.EnumReturnCode;
 import com.sc.util.json.JsonResult;
-import com.sc.util.redis.RedisKey;
-import com.sc.util.redis.RedisUtil;
 import com.sc.util.session.WebSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -28,19 +30,22 @@ import java.util.Map;
 @RequestMapping("/sys/user")
 public class SysUserController {
     @Autowired
-    private RedisUtil redisUtil;
+    private SiteLoginService siteLoginService;
     @Autowired
     private SysUserService sysUserService;
 
     @RequestMapping(value = "/info", method = RequestMethod.POST)
-    public JsonResult info(@RequestBody Map<String, String> paramsMap) {
-        if (paramsMap == null || paramsMap.get("token") == null) {
+    public JsonResult info() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails object = (UserDetails) authentication.getPrincipal();
+//        System.out.println(authentication.getPrincipal());
+//        WebSession webSession = (WebSession) object;
+        SysUser sysUser = sysUserService.getByUserName(object.getUsername());
+        WebSession webSession = new WebSession();
+        if (sysUser == null) {
             return new JsonResult(EnumReturnCode.FAIL_INFO_GET);
         }
-        WebSession webSession = redisUtil.get(RedisKey.WEBSESSION + paramsMap.get("token"), WebSession.class);
-        if (webSession == null) {
-            return new JsonResult(EnumReturnCode.FAIL_INFO_GET);
-        }
+        siteLoginService.setWebSession(sysUser, webSession);
         return new JsonResult(EnumReturnCode.SUCCESS_INFO_GET, webSession);
     }
 

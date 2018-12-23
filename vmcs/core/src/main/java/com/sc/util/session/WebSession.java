@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,7 +20,7 @@ import java.util.List;
  * @author 孔垂云
  * @date 2017-05-23
  */
-public class WebSession implements Serializable, UserDetails {
+public class WebSession implements Serializable, UserDetails, Principal {
     private String user;
     private String status;
     private String token;
@@ -30,14 +31,18 @@ public class WebSession implements Serializable, UserDetails {
     private String resources;//用@分隔
     private String ip;
     private Integer userId;
+    @JsonIgnore
     private String password;
+    @JsonIgnore
     private List<SysRole> roleList;
     @JsonIgnore
     private String manageUrl;//用来校验是否允许访问这个请求地址
     private String userRealName;//页面上显示的用户真实姓名
     private String roleName;//页面上显示的用户角色名称用@分隔
+
     public WebSession() {
     }
+
     public WebSession(String name, String password, List<SysRole> roleList) {
         this.name = name;
         this.password = password;
@@ -198,6 +203,9 @@ public class WebSession implements Serializable, UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SysRole> roleList = this.roleList;
         Collection<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+        if (roleList == null) {
+            return grantedAuthorities;
+        }
         for (SysRole sysRole : roleList) {
             GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(sysRole.getRoleCode());
             grantedAuthorities.add(grantedAuthority);
@@ -212,7 +220,7 @@ public class WebSession implements Serializable, UserDetails {
 
     @Override
     public String getUsername() {
-        return null;
+        return this.name;
     }
 
     @Override

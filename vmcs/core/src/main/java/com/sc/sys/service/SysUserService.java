@@ -13,6 +13,8 @@ import com.sc.util.page.PageUtil;
 import com.sc.util.string.StringUtil;
 import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -205,8 +207,11 @@ public class SysUserService {
      * 验证密码是否正确
      */
     public boolean checkPass(SysUser sysUser, String inputPassword) {
-        Md5SaltUtil md5SaltUtil = new Md5SaltUtil(sysUser.getRandomCode());
-        return md5SaltUtil.isPasswordValid(sysUser.getUserPassword(), inputPassword);
+        String password = sysUser.getUserPassword();
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        return passwordEncoder.matches(inputPassword,password);
+//        Md5SaltUtil md5SaltUtil = new Md5SaltUtil(sysUser.getRandomCode());
+//        return md5SaltUtil.isPasswordValid(sysUser.getUserPassword(), inputPassword);
     }
 
     public static void main(String[] args) {
