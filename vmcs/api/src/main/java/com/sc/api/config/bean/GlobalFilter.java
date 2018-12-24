@@ -12,19 +12,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class GlobalFilter {
 
-//    /**
-//     * 增加filter，用于记录request中body的参数值
-//     *
-//     * @return
-//     */
-//    @Bean
-//    public FilterRegistrationBean logBodyFilter() {
-//        FilterRegistrationBean registration = new FilterRegistrationBean();
-//        registration.setFilter(new HttpServletRequestReplacedFilter());
-//        registration.addUrlPatterns("/apollo/*");
-//        registration.addInitParameter("paramName", "paramValue");
-//        registration.setName("testFilter");
-//        registration.setOrder(-1);
-//        return registration;
-//    }
+    /**
+     * 增加filter，用于记录request中body的参数值,再最开始过滤
+     *
+     * @return
+     */
+    @Bean
+    public FilterRegistrationBean logBodyFilter() {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setFilter(new HttpServletRequestReplacedFilter());
+        registration.addInitParameter("paramName", "paramValue");
+        registration.setName("consumerRequestFilter");
+        registration.setOrder(-2147483648);
+        return registration;
+    }
 }

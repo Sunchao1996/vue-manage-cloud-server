@@ -1,6 +1,7 @@
 package com.sc.api.config.interceptor;
 
 import com.sc.api.config.filter.BodyReaderHttpServletRequestWrapper;
+import com.sc.api.security.utils.SecurityUtils;
 import com.sc.sys.model.SysUser;
 import com.sc.sys.service.SysLogService;
 import com.sc.sys.service.SysUserService;
@@ -13,10 +14,12 @@ import com.sc.util.session.SessionUtil;
 import com.sc.util.session.WebSession;
 import com.sc.util.string.StringUtil;
 import com.sc.util.web.WebUtil;
+import org.apache.catalina.security.SecurityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -47,70 +50,26 @@ public class CheckAuthorizationInterceptor implements HandlerInterceptor {
      * header或request里面只要包含Authorization即可
      */
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        if (StringUtil.isNullOrEmpty(request.getHeader("X-Token")) || SessionUtil.getWebSession(request) == null) {
+        if (StringUtil.isNullOrEmpty(request.getHeader("Authorization")) || SessionUtil.getWebSession(request) == null) {
             JsonResult jsonResult = new JsonResult(EnumReturnCode.FAIL_INTERCEPTOR1);
             response.setStatus(HttpStatus.UNAUTHORIZED.value());//状态设置为未授权
             WebUtil.out(response, JsonUtil.toStr(jsonResult));
             return false;
         } else {
-            //判断token是否一致
-            //校验权限
+            //校验权限，记录请求日志
             String path = request.getServletPath();
             String parameters = "";//参数
-            if (request.getMethod().equals("GET")) {
-                parameters = StringUtil.getOperaParams(request);
-            } else {
-                ServletInputStream streams = null;
-                if (request instanceof HttpServletRequest) {
-                    streams = ((BodyReaderHttpServletRequestWrapper) request).getInputStream();
-                } else {
-                    streams = request.getInputStream();
-                }
-                StringBuilder content = new StringBuilder();
-                byte[] b = new byte[1024];
-                int lens = -1;
-                while ((lens = streams.read(b)) > 0) {
-                    content.append(new String(b, 0, lens));
-                }
-                parameters = content.toString();
-            }
-            WebSession webSession = SessionUtil.getWebSession(request);
-            String requestIp = StringUtil.getIp(request);
-            if (!requestIp.equals(webSession.getIp()) && !request.getHeader("X-Token").equals(webSession.getToken())) {
-                JsonResult jsonResult = new JsonResult(EnumReturnCode.FAIL_INTERCEPTOR2);
-                response.setStatus(HttpStatus.UNAUTHORIZED.value());//状态设置为未授权
-                WebUtil.out(response, JsonUtil.toStr(jsonResult));
-                return false;
-            }
-            logOperation(path, parameters, webSession);
-
-            //如果用户被锁定，直接踢出
-            SysUser sysUser = sysUserService.getById(webSession.getUserId());
-            if (sysUser.getUserStatus() == 1) {
+            parameters = getRequestParams(request);
+            logOperation(path, parameters, request);
+            UserDetails userDetails = SecurityUtils.getUserDetails();
+            if (userDetails == null) {
                 JsonResult jsonResult = new JsonResult(EnumReturnCode.FAIL_USER_LOCK);
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());//状态设置为未授权
                 WebUtil.out(response, JsonUtil.toStr(jsonResult));
                 return false;
-            } else {
-                //請求路徑不再允许范围之内
-                String manageUrl = webSession.getManageUrl();
-                if (manageUrl.indexOf(path) == -1 && checkUrl(path.substring(path.lastIndexOf("/") + 1))) {
-                    JsonResult jsonResult = new JsonResult(EnumReturnCode.FAIL_NOAUTH);
-                    jsonResult.setMsg("无权限访问，请联系管理员！");
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());//状态设置为未授权
-                    WebUtil.out(response, JsonUtil.toStr(jsonResult));
-                    return false;
-                }
-                sysLogService.addLog(webSession.getUserId(), path, parameters, webSession.getIp());
-                return true;
             }
+            return true;
         }
-    }
-
-    private static boolean checkUrl(String url) {
-        Pattern pattern = Pattern.compile("^(add|update|delete|save|import).*");
-        Matcher matcher = pattern.matcher(url);
-        return matcher.matches();
     }
 
     /**
@@ -118,11 +77,12 @@ public class CheckAuthorizationInterceptor implements HandlerInterceptor {
      *
      * @param path
      * @param parameters
-     * @param manageSession
      */
-    public void logOperation(String path, String parameters, WebSession manageSession) {
+    public void logOperation(String path, String parameters, HttpServletRequest request) {
+        String ip = StringUtil.getIp(request);
+        String username = SecurityUtils.getUserDetails().getUsername();
         String log = "";
-        log = "[OPERALOG-操作日志]" + "-[" + manageSession.getIp() + "]" + "-[" + DateUtil.getSystemTime() + "]-" + "[userName:" + manageSession.getName() + "]-" + "[INFO]-" + path + "-" + parameters;
+        log = "[OPERALOG-操作日志]" + "-[" + ip + "]" + "-[" + DateUtil.getSystemTime() + "]-" + "[userName:" + username + "]-" + "[INFO]-" + path + "-" + parameters;
         logger.info(log);
     }
 
@@ -133,4 +93,25 @@ public class CheckAuthorizationInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
     }
 
+    public static String getRequestParams(HttpServletRequest request) {
+        String parameters = "";
+        try {
+            if (request.getMethod().equals("GET")) {
+                parameters = StringUtil.getOperaParams(request);
+            } else {
+                ServletInputStream streams = null;
+                streams = request.getInputStream();
+                StringBuilder content = new StringBuilder();
+                byte[] b = new byte[1024];
+                int lens = -1;
+                while ((lens = streams.read(b)) > 0) {
+                    content.append(new String(b, 0, lens));
+                }
+                parameters = content.toString();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return parameters;
+    }
 }

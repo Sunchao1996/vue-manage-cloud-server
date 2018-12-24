@@ -27,7 +27,7 @@ public class CheckTokenInterceptor implements HandlerInterceptor {
      * header或request里面只要包含Authorization即可
      */
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String token = WebUtil.getSafeStr(request.getHeader("X-Token"));//token
+        String token = WebUtil.getSafeStr(request.getHeader("Authorization"));//token
         if (StringUtil.isNullOrEmpty(token)) {
             JsonResult jsonResult = new JsonResult(EnumReturnCode.FAIL_NOLOGIN);
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());//状态设置为错误

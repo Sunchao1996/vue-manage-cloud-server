@@ -1,6 +1,7 @@
 package com.sc.api.config.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -30,12 +31,20 @@ public class ApiOAuthConfig {
     public static class ResrouceServerConfiguration extends ResourceServerConfigurerAdapter {
         @Autowired
         private RedisConnectionFactory redisConnectionFactory;
+        @Autowired
+        private ConsumterAccessDeniedHandler ConsumterAccessDeniedHandler;
+        @Autowired
+        private ConsumterAuthenticationEntryPoint consumterAuthenticationEntryPoint;
+
         @Override
         public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
             resources.tokenStore(tokenStore()).resourceId("manage").stateless(true);
+            resources.accessDeniedHandler(ConsumterAccessDeniedHandler);
+            resources.authenticationEntryPoint(consumterAuthenticationEntryPoint);
         }
+
         @Bean
-        public TokenStore tokenStore(){
+        public TokenStore tokenStore() {
             ApiRedisTokenStore apiRedisTokenStore = new ApiRedisTokenStore(redisConnectionFactory);
             apiRedisTokenStore.setPrefix("authserver:oauth:");
             return apiRedisTokenStore;
@@ -46,5 +55,6 @@ public class ApiOAuthConfig {
             http.authorizeRequests().antMatchers("/login/login").permitAll();
             http.authorizeRequests().antMatchers("/login/logout").authenticated();
         }
+
     }
 }

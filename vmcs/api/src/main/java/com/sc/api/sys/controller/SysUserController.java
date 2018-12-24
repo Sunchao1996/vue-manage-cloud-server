@@ -40,6 +40,7 @@ public class SysUserController {
         UserDetails object = (UserDetails) authentication.getPrincipal();
 //        System.out.println(authentication.getPrincipal());
 //        WebSession webSession = (WebSession) object;
+        System.out.println(object instanceof WebSession);
         SysUser sysUser = sysUserService.getByUserName(object.getUsername());
         WebSession webSession = new WebSession();
         if (sysUser == null) {

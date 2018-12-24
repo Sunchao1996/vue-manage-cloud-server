@@ -34,34 +34,25 @@ public class CheckAuthorizationConfig extends WebMvcConfigurerAdapter {
         // 多个拦截器组成一个拦截器链
         // addPathPatterns 用于添加拦截规则
         // excludePathPatterns 用户排除拦截
-        //判断是否带X-Token
-//        registry.addInterceptor(checkVersionInterceptor())
-//                .excludePathPatterns("/login/login")
-//                .excludePathPatterns("/apollo/*")
-//                .excludePathPatterns("/security/*")
-//                .excludePathPatterns("/oauth/*")
-//                .addPathPatterns("/*")
-//                .addPathPatterns("/*/*")
-//                .addPathPatterns("/*/*/*")
-//        ;
-//
-//        registry.addInterceptor(new CheckAuthorizationInterceptor(sysUserService(), sysLogService()))
-//                .addPathPatterns("/*")
-//                .addPathPatterns("/*/*")
-//                .addPathPatterns("/*/*/*")
-//                .excludePathPatterns("/login/login")
-//                .excludePathPatterns("/oauth/*")
-//                .excludePathPatterns("/apollo/*")
-//                .excludePathPatterns("/security/*")
-//        ;
-//
-//        //记录日志
-//        registry.addInterceptor(new LogRequestInterceptor()).addPathPatterns("/*")
-//                .excludePathPatterns("/apollo/*")
-//                .excludePathPatterns("/oauth/*")
-//                .addPathPatterns("/*")
-//                .addPathPatterns("/*/*")
-//                .addPathPatterns("/*/*/*");
+        registry.addInterceptor(checkVersionInterceptor())
+                .excludePathPatterns("/login/login")
+                .addPathPatterns("/*")
+                .addPathPatterns("/*/*")
+                .addPathPatterns("/*/*/*")
+        ;
+
+        registry.addInterceptor(new CheckAuthorizationInterceptor(sysUserService(), sysLogService()))
+                .addPathPatterns("/*")
+                .addPathPatterns("/*/*")
+                .addPathPatterns("/*/*/*")
+                .excludePathPatterns("/login/login")
+        ;
+
+        //记录日志
+        registry.addInterceptor(new LogRequestInterceptor())
+                .addPathPatterns("/*")
+                .addPathPatterns("/*/*")
+                .addPathPatterns("/*/*/*");
         super.addInterceptors(registry);
     }
 }

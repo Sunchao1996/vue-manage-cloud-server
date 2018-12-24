@@ -36,7 +36,7 @@ public class SysUserDetailsService implements UserDetailsService {
     private SysUserRoleDao sysUserRoleDao;
 
     @Override
-    public WebSession loadUserByUsername(String userName) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         SysUser sysUser = sysUserDao.getByUserName(userName);
         if (sysUser == null) {
             throw new UsernameNotFoundException(userName + "not found");

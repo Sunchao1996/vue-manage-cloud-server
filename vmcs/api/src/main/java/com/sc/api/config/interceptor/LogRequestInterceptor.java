@@ -1,11 +1,14 @@
 package com.sc.api.config.interceptor;
 
+import com.sc.api.security.utils.SecurityUtils;
+import com.sc.sys.service.SysUserService;
 import com.sc.util.date.DateUtil;
 import com.sc.util.session.WebSession;
-import com.sc.util.session.SessionUtil;
 import com.sc.util.string.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,8 +23,6 @@ import javax.servlet.http.HttpServletResponse;
 @Component
 public class LogRequestInterceptor implements HandlerInterceptor {
     private static Logger logger = LoggerFactory.getLogger("operationLog");
-   /* @Autowired
-    private ResponseHolder responseHolder;*/
 
     /**
      * 记录操作日志
@@ -29,14 +30,13 @@ public class LogRequestInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         //校验权限
         String path = request.getServletPath();
-        String parameters = StringUtil.getBodyString(request.getReader());//参数
-        WebSession webSession = SessionUtil.getWebSession(request);
-        if (webSession == null) {
-            webSession = new WebSession();
-            webSession.setIp(StringUtil.getIp(request));
-            webSession.setName("LOGIN");
+        String parameters = CheckAuthorizationInterceptor.getRequestParams(request);//参数
+        UserDetails userDetails = SecurityUtils.getUserDetails();
+        if (userDetails == null) {
+            userDetails = new WebSession();
+            ((WebSession) userDetails).setName("LOGIN");
         }
-        logOperation(path, parameters, webSession);//记录日志
+        logOperation(request, path, parameters, userDetails);//记录日志
         return true;
     }
 
@@ -45,12 +45,11 @@ public class LogRequestInterceptor implements HandlerInterceptor {
      *
      * @param path
      * @param parameters
-     * @param webSession
      */
-    public void logOperation(String path, String parameters, WebSession webSession) {
+    public void logOperation(HttpServletRequest request, String path, String parameters, UserDetails userDetails) {
         String log = "";
-        if (webSession == null) webSession = new WebSession();
-        log = "[OPERALOG-操作日志]" + "-[" + webSession.getIp() + "]" + "-[" + DateUtil.getSystemTime() + "]-" + "[" + webSession.getName() + "]-" + "[INFO]-" + path + "-" + parameters;
+        String ip = StringUtil.getIp(request);
+        log = "[OPERALOG-操作日志]" + "-[" + ip + "]" + "-[" + DateUtil.getSystemTime() + "]-" + "[" + userDetails.getUsername() + "]-" + "[INFO]-" + path + "-" + parameters;
         logger.info(log);
     }
 
