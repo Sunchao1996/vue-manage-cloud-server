@@ -5,10 +5,8 @@ import com.sc.sys.service.SysResourceService;
 import com.sc.util.code.EnumReturnCode;
 import com.sc.util.json.JsonResult;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,18 +18,19 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/sys/resources")
+@PreAuthorize("hasAuthority('admin')")
 public class SysResourceController {
     @Autowired
     private SysResourceService sysResourceService;
 
-    @RequestMapping("/list")
+    @GetMapping
     public JsonResult list() {
         List<SysResource> list = sysResourceService.listAll();
         return new JsonResult(EnumReturnCode.SUCCESS_INFO_GET, careateResources(list));
     }
 
-    @RequestMapping("/getById")
-    public JsonResult get(Integer id) {
+    @GetMapping("/{id}")
+    public JsonResult get(@PathVariable Integer id) {
         SysResource sysResource = sysResourceService.getById(id);
         if (sysResource != null) {
             return new JsonResult(EnumReturnCode.SUCCESS_INFO_GET, sysResource);
@@ -40,7 +39,7 @@ public class SysResourceController {
         }
     }
 
-    @RequestMapping(value = "/add", method = RequestMethod.POST)
+    @PostMapping(produces = "application/json;charset=utf-8")
     public JsonResult add(@RequestBody SysResource resources) {
         int flag = sysResourceService.save(resources);
         if (flag > 0) {
@@ -50,7 +49,7 @@ public class SysResourceController {
         }
     }
 
-    @RequestMapping(value = "/update", method = RequestMethod.POST)
+    @PutMapping
     public JsonResult update(@RequestBody SysResource resource) {
         int flag = sysResourceService.updateById(resource);
         if (flag > 0) {
@@ -60,8 +59,8 @@ public class SysResourceController {
         }
     }
 
-    @RequestMapping("/delete")
-    public JsonResult delete(Integer id) {
+    @DeleteMapping("/{id}")
+    public JsonResult delete(@PathVariable Integer id) {
         int flag = sysResourceService.deleteById(id);
         if (flag > 0) {
             return new JsonResult(EnumReturnCode.SUCCESS_OPERA);
@@ -71,8 +70,8 @@ public class SysResourceController {
     }
 
 
-    @RequestMapping("/checkCode")
-    public JsonResult checkCode(String resourcesCode) {
+    @GetMapping("/code/{resourcesCode}")
+    public JsonResult checkCode(@PathVariable String resourcesCode) {
         SysResource sysResource = sysResourceService.getByResourceCode(resourcesCode);
         if (sysResource == null) {
             return new JsonResult(EnumReturnCode.SUCCESS_INFO_GET, true);

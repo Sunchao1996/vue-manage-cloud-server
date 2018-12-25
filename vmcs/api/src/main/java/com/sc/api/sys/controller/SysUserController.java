@@ -10,13 +10,11 @@ import com.sc.util.code.EnumReturnCode;
 import com.sc.util.json.JsonResult;
 import com.sc.util.session.WebSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -27,19 +25,18 @@ import java.util.Map;
  * @author 孙超 created on 2018/11/8
  */
 @RestController
-@RequestMapping("/sys/user")
+@RequestMapping("/sys/users")
+@PreAuthorize("hasAuthority('admin')")
 public class SysUserController {
     @Autowired
     private SiteLoginService siteLoginService;
     @Autowired
     private SysUserService sysUserService;
 
-    @RequestMapping(value = "/info", method = RequestMethod.POST)
+    @GetMapping("/info")
     public JsonResult info() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails object = (UserDetails) authentication.getPrincipal();
-//        System.out.println(authentication.getPrincipal());
-//        WebSession webSession = (WebSession) object;
         System.out.println(object instanceof WebSession);
         SysUser sysUser = sysUserService.getByUserName(object.getUsername());
         WebSession webSession = new WebSession();
@@ -53,8 +50,8 @@ public class SysUserController {
     /**
      * 根据条件查询
      */
-    @RequestMapping(value = "list", method = RequestMethod.POST)
-    public JsonResult list(@RequestBody SysUserSearchVO sysUserSearchVO) {
+    @GetMapping
+    public JsonResult list(SysUserSearchVO sysUserSearchVO) {
         List<SysUser> list = sysUserService.listBySearch(sysUserSearchVO);
         Integer count = sysUserService.count(sysUserSearchVO);
         PageDto pageDto = new PageDto(sysUserSearchVO.getPageIndex(), count, list);
@@ -64,12 +61,9 @@ public class SysUserController {
     /**
      * 根据id修改状态
      */
-    @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
-    public JsonResult updateStatus(@RequestBody Map<String, String> paramsMap) {
-        if (paramsMap == null || paramsMap.get("usid") == null) {
-            return new JsonResult(EnumReturnCode.FAIL_OPERA);
-        }
-        int flag = sysUserService.updateStatus(Integer.valueOf(paramsMap.get("usid")));
+    @PutMapping("/status/{usid}")
+    public JsonResult updateStatus(@PathVariable String usid) {
+        int flag = sysUserService.updateStatus(Integer.valueOf(usid));
         if (flag > 0) {
             return new JsonResult(EnumReturnCode.SUCCESS_OPERA);
         } else {
@@ -80,12 +74,9 @@ public class SysUserController {
     /**
      * 根据id重置密码为123456
      */
-    @RequestMapping(value = "/updateResetPwd", method = RequestMethod.POST)
-    public JsonResult updateResetPwd(@RequestBody Map<String, String> paramsMap) {
-        if (paramsMap == null || paramsMap.get("usid") == null) {
-            return new JsonResult(EnumReturnCode.FAIL_OPERA);
-        }
-        int flag = sysUserService.updateResetPwd(Integer.valueOf(paramsMap.get("usid")));
+    @PutMapping(value = "/password/{usid}")
+    public JsonResult updateResetPwd(@PathVariable String usid) {
+        int flag = sysUserService.updateResetPwd(Integer.valueOf(usid));
         if (flag > 0) {
             return new JsonResult(EnumReturnCode.SUCCESS_OPERA);
         } else {
@@ -96,9 +87,9 @@ public class SysUserController {
     /**
      * 检验用户名是否可用
      */
-    @RequestMapping(value = "/checkUserCode", method = RequestMethod.POST)
-    public JsonResult checkUserName(@RequestBody SysUserSearchVO sysUserSearchVO) {
-        SysUser sysUser = sysUserService.getByUserName(sysUserSearchVO.getUserName());
+    @GetMapping(value = "/code/{userName}")
+    public JsonResult checkUserName(@PathVariable String userName) {
+        SysUser sysUser = sysUserService.getByUserName(userName);
         if (sysUser != null) {
             return new JsonResult(EnumReturnCode.SUCCESS_INFO_GET, false);
         } else {
@@ -109,7 +100,7 @@ public class SysUserController {
     /**
      * 新增用户
      */
-    @RequestMapping(value = "/addUser", method = RequestMethod.POST)
+    @PostMapping(value = "/addUser")
     public JsonResult save(@RequestBody SysUser sysUser) {
         int flag = sysUserService.save(sysUser);
         if (flag > 0) {
@@ -122,9 +113,9 @@ public class SysUserController {
     /**
      * 根据用户id删除用户
      */
-    @RequestMapping(value = "/deleteUser", method = RequestMethod.POST)
-    public JsonResult delete(@RequestBody SysUser sysUser) {
-        int flag = sysUserService.deleteById(sysUser.getId());
+    @DeleteMapping(value = "/{id}")
+    public JsonResult delete(@PathVariable Integer id) {
+        int flag = sysUserService.deleteById(id);
         if (flag > 0) {
             return new JsonResult(EnumReturnCode.SUCCESS_OPERA);
         } else {
@@ -135,7 +126,7 @@ public class SysUserController {
     /**
      * 修改用户信息
      */
-    @RequestMapping(value = "/updateUser", method = RequestMethod.POST)
+    @PutMapping
     public JsonResult updateUser(@RequestBody SysUser sysUser) {
         int flag = sysUserService.updateById(sysUser);
         if (flag > 0) {
@@ -148,9 +139,9 @@ public class SysUserController {
     /**
      * 根据用户id获取用户信息
      */
-    @RequestMapping(value = "/getById", method = RequestMethod.POST)
-    public JsonResult getById(@RequestBody SysUser sysUser) {
-        SysUser getObj = sysUserService.getById(sysUser.getId());
+    @GetMapping(value = "/{id}")
+    public JsonResult getById(@PathVariable Integer id) {
+        SysUser getObj = sysUserService.getById(id);
         return new JsonResult(EnumReturnCode.SUCCESS_INFO_GET, getObj);
     }
 
@@ -160,7 +151,7 @@ public class SysUserController {
      * @param sysPwd
      * @return
      */
-    @RequestMapping(value = "/updateUserPwd", method = RequestMethod.POST)
+    @PutMapping(value = "/password")
     public JsonResult updateUserPwd(@RequestBody SysPwd sysPwd) {
         int flag = sysUserService.updateUserPwd(sysPwd);
         if (flag > 0) {

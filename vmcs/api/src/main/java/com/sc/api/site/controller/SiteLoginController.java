@@ -27,10 +27,7 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
@@ -50,14 +47,14 @@ public class SiteLoginController {
     @Autowired
     private TokenStore tokenStore;
     private RestTemplate restTemplate = new RestTemplate();
+
     /**
      * 校验登录
      *
      * @param userInfoLoginDto
      * @return
      */
-    @PreAuthorize("permitAll()")
-    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    @PostMapping(value = "/login")
     public JsonResult checkLogin(HttpServletRequest request, @Valid @RequestBody UserInfoLoginDto userInfoLoginDto) {
         boolean flag = false;
         SysUser sysUser = sysUserService.getByUserName(userInfoLoginDto.getUsername());
@@ -75,15 +72,15 @@ public class SiteLoginController {
             map.put("client_secret", Collections.singletonList("123456"));
             map.put("username", Collections.singletonList(userInfoLoginDto.getUsername()));
             map.put("password", Collections.singletonList(userInfoLoginDto.getPassword()));
-            map.put("grant_type",Collections.singletonList("password"));
+            map.put("grant_type", Collections.singletonList("password"));
             //HttpEntity
-            HttpEntity httpEntity = new HttpEntity(map,null);
+            HttpEntity httpEntity = new HttpEntity(map, null);
             //获取 Token
             try {
                 ResponseEntity<OAuth2AccessToken> body = restTemplate.exchange("http://localhost:8080/oauth/token", HttpMethod.POST, httpEntity, OAuth2AccessToken.class);
                 OAuth2AccessToken oAuth2AccessToken = body.getBody();
                 return new JsonResult(EnumReturnCode.SUCCESS_LOGIN, oAuth2AccessToken);
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
                 return new JsonResult(EnumReturnCode.FAIL_LOGIN_ERROR);
             }
@@ -97,11 +94,11 @@ public class SiteLoginController {
      *
      * @return
      */
-    @RequestMapping(value = "/logout", method = RequestMethod.POST)
+    @PostMapping(value = "/logout")
     public JsonResult logout() {
-        Authentication authentication =  SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         OAuth2Authentication oAuth2Authentication = (OAuth2Authentication) authentication;
-        OAuth2AccessToken token = tokenStore.getAccessToken( oAuth2Authentication);
+        OAuth2AccessToken token = tokenStore.getAccessToken(oAuth2Authentication);
         tokenStore.removeAccessToken(token);
         return new JsonResult(EnumReturnCode.SUCCESS_OPERA);
     }

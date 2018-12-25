@@ -50,7 +50,7 @@ public class CheckAuthorizationInterceptor implements HandlerInterceptor {
      * header或request里面只要包含Authorization即可
      */
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        if (StringUtil.isNullOrEmpty(request.getHeader("Authorization")) || SessionUtil.getWebSession(request) == null) {
+        if (StringUtil.isNullOrEmpty(request.getHeader("Authorization"))) {
             JsonResult jsonResult = new JsonResult(EnumReturnCode.FAIL_INTERCEPTOR1);
             response.setStatus(HttpStatus.UNAUTHORIZED.value());//状态设置为未授权
             WebUtil.out(response, JsonUtil.toStr(jsonResult));
