@@ -4,6 +4,7 @@ import com.sc.sys.dao.SysRoleDao;
 import com.sc.sys.dao.SysRoleResourceDao;
 import com.sc.sys.model.SysResource;
 import com.sc.sys.model.SysRole;
+import com.sc.sys.model.SysRoleGroup;
 import com.sc.sys.model.SysRolesResources;
 import com.sc.util.string.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,46 +23,57 @@ import java.util.List;
 public class SysRoleService {
     @Autowired
     private SysRoleDao sysRoleDao;
-    @Autowired
-    private SysRoleResourceDao sysRoleResourceDao;
 
     /**
-     * 新增角色
+     * 新增普通角色/角色组
      */
     @Transactional
     public int save(SysRole sysRole) {
+        if (sysRole.getRoleType() == null) {
+            return -1;
+        }
+
         Integer roleId = sysRoleDao.save(sysRole);
         if (roleId == null || roleId == 0) {
             return 0;
         }
-        int flag = sysRoleResourceDao.batchAdd(createRolesResourcesList(roleId, sysRole.getResourcesIds()));
-        return flag;
+        if (sysRole.getRoleType() == 2) {
+            int flag = sysRoleDao.batchAdd(createGroupRolesList(roleId, sysRole.getRoleIds()));
+            return flag;
+        } else {
+            return roleId;
+        }
     }
 
     /**
-     * 修改角色
+     * 修改普通角色/角色组
      */
     public int updateById(SysRole sysRole) {
+        if (sysRole.getRoleType() == null) {
+            sysRole.setRoleType(1);
+        }
         int flag = sysRoleDao.updateById(sysRole);
-        flag += sysRoleResourceDao.deleteByRoleId(sysRole.getId());
-        flag += sysRoleResourceDao.batchAdd(createRolesResourcesList(sysRole.getId(), sysRole.getResourcesIds()));
+        if (sysRole.getRoleType() == 2) {
+            flag += sysRoleDao.deleteGroupRole(sysRole.getId());
+            flag += sysRoleDao.batchAdd(createGroupRolesList(sysRole.getId(), sysRole.getRoleIds()));
+        }
         return flag;
     }
 
     /**
-     * 构成RolesResources对象
+     * 构成RolesGroup对象
      */
-    public List<SysRolesResources> createRolesResourcesList(Integer roleId, String resources) {
-        String[] resourceArray = resources.split("@");
-        List<SysRolesResources> list = new ArrayList<>();
-        if (resourceArray.length == 1 && StringUtil.isNullOrEmpty(resourceArray[0])) {
+    public List<SysRoleGroup> createGroupRolesList(Integer roleId, String roleIds) {
+        String[] roleArrays = roleIds.split("@");
+        List<SysRoleGroup> list = new ArrayList<>();
+        if (roleArrays.length == 1 && StringUtil.isNullOrEmpty(roleArrays[0])) {
             return new ArrayList<>();
         }
-        for (String temp : resourceArray) {
-            SysRolesResources sysRolesResources = new SysRolesResources();
-            sysRolesResources.setRoleId(roleId);
-            sysRolesResources.setResourceId(Integer.valueOf(temp));
-            list.add(sysRolesResources);
+        for (String temp : roleArrays) {
+            SysRoleGroup sysRoleGroup = new SysRoleGroup();
+            sysRoleGroup.setRoleId(Integer.valueOf(temp));
+            sysRoleGroup.setGroupRoleId(roleId);
+            list.add(sysRoleGroup);
         }
         return list;
     }
@@ -71,15 +83,22 @@ public class SysRoleService {
      */
     public int deleteById(Integer id) {
         int flag = sysRoleDao.deleteById(id);
-        flag += sysRoleResourceDao.deleteByRoleId(id);
+        flag += sysRoleDao.deleteGroupRole(id);
         return flag;
     }
 
     /**
      * 查询所有
      */
-    public List<SysRole> listAll() {
-        return sysRoleDao.listAll();
+    public List<SysRole> list(Integer roleType) {
+        if (roleType == null || roleType > 2) {
+            roleType = 1;
+        }
+        if (roleType == 1) {
+            return sysRoleDao.listAllRoles();
+        } else {
+            return sysRoleDao.listAllGroup();
+        }
     }
 
     /**
@@ -87,13 +106,16 @@ public class SysRoleService {
      */
     public SysRole getById(Integer id) {
         SysRole sysRole = sysRoleDao.getById(id);
-        List<SysResource> resourceList = sysRoleResourceDao.listResourcesByRoleId(id);
-        StringBuffer resourcesIdsBuf = new StringBuffer();
-        for (SysResource sysResource : resourceList) {
-            resourcesIdsBuf.append(sysResource.getId());
-            resourcesIdsBuf.append("@");
+        if (sysRole.getRoleType() == 1) {
+            return sysRole;
         }
-        sysRole.setResourcesIds(resourcesIdsBuf.toString());
+        List<SysRole> roleList = sysRoleDao.listAllGroupRoles(id);
+        StringBuffer roleIdsBuf = new StringBuffer();
+        for (SysRole sysRole1 : roleList) {
+            roleIdsBuf.append(sysRole1.getId());
+            roleIdsBuf.append("@");
+        }
+        sysRole.setRoleIds(roleIdsBuf.toString());
         return sysRole;
     }
 

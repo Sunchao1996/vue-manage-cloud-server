@@ -5,6 +5,7 @@ import com.sc.sys.service.SysRoleService;
 import com.sc.util.code.EnumReturnCode;
 import com.sc.util.json.JsonResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,17 +23,17 @@ import java.util.Map;
 @RestController
 @RequestMapping("/sys/roles")
 @Validated
-@PreAuthorize("hasAuthority('admin')")
-public class SysRoleController {
+public class SysRoleController  {
     @Autowired
     private SysRoleService sysRoleService;
 
     /**
      * 列表查询
      */
-    @GetMapping
-    public JsonResult list() {
-        List<SysRole> list = sysRoleService.listAll();
+    @GetMapping("/list/{roleType}")
+    @PreAuthorize("hasAuthority('roles')")
+    public JsonResult list(@PathVariable Integer roleType) {
+        List<SysRole> list = sysRoleService.list(roleType);
         if (list == null) {
             list = new ArrayList<>();
         }
@@ -43,6 +44,7 @@ public class SysRoleController {
      * 添加角色
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('rolesadd')")
     public JsonResult add(@RequestBody @Valid SysRole sysRole) {
         int flag = sysRoleService.save(sysRole);
         if (flag > 0) {
@@ -57,6 +59,7 @@ public class SysRoleController {
      * 根据代码验证
      */
     @GetMapping("/code/{roleCode}")
+    @PreAuthorize("permitAll()")
     public JsonResult checkRoleCode(@PathVariable String roleCode) {
         SysRole sysRole = sysRoleService.getByRoleCode(roleCode);
         if (sysRole == null) {
@@ -70,6 +73,7 @@ public class SysRoleController {
      * 根据id删除
      */
     @DeleteMapping
+    @PreAuthorize("hasAuthority('rolesdelete')")
     public JsonResult delete(@RequestBody Map<String, String> paramsMap) {
         if (paramsMap == null || paramsMap.get("roleId") == null) {
             return new JsonResult(EnumReturnCode.FAIL_ARGS);
@@ -86,6 +90,7 @@ public class SysRoleController {
      * 根据id获得数据
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('rolesupdate')")
     public JsonResult get(@PathVariable String id) {
         SysRole sysRole = sysRoleService.getById(Integer.valueOf(id));
         if (sysRole != null) {
@@ -99,6 +104,7 @@ public class SysRoleController {
      * 修改角色
      */
     @PutMapping
+    @PreAuthorize("hasAuthority('rolesupdate')")
     public JsonResult update(@RequestBody @Valid SysRole sysRole) {
         int flag = sysRoleService.updateById(sysRole);
         if (flag > 0) {

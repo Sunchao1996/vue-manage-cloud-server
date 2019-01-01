@@ -26,7 +26,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/sys/users")
-@PreAuthorize("hasAuthority('admin')")
 public class SysUserController {
     @Autowired
     private SiteLoginService siteLoginService;
@@ -34,6 +33,7 @@ public class SysUserController {
     private SysUserService sysUserService;
 
     @GetMapping("/info")
+    @PreAuthorize("permitAll()")
     public JsonResult info() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails object = (UserDetails) authentication.getPrincipal();
@@ -51,6 +51,7 @@ public class SysUserController {
      * 根据条件查询
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('users')")
     public JsonResult list(SysUserSearchVO sysUserSearchVO) {
         List<SysUser> list = sysUserService.listBySearch(sysUserSearchVO);
         Integer count = sysUserService.count(sysUserSearchVO);
@@ -62,6 +63,7 @@ public class SysUserController {
      * 根据id修改状态
      */
     @PutMapping("/status/{usid}")
+    @PreAuthorize("hasAuthority('usersstatus')")
     public JsonResult updateStatus(@PathVariable String usid) {
         int flag = sysUserService.updateStatus(Integer.valueOf(usid));
         if (flag > 0) {
@@ -75,6 +77,7 @@ public class SysUserController {
      * 根据id重置密码为123456
      */
     @PutMapping(value = "/password/{usid}")
+    @PreAuthorize("hasAuthority('usersupdate')")
     public JsonResult updateResetPwd(@PathVariable String usid) {
         int flag = sysUserService.updateResetPwd(Integer.valueOf(usid));
         if (flag > 0) {
@@ -88,6 +91,7 @@ public class SysUserController {
      * 检验用户名是否可用
      */
     @GetMapping(value = "/code/{userName}")
+    @PreAuthorize("permitAll()")
     public JsonResult checkUserName(@PathVariable String userName) {
         SysUser sysUser = sysUserService.getByUserName(userName);
         if (sysUser != null) {
@@ -100,7 +104,8 @@ public class SysUserController {
     /**
      * 新增用户
      */
-    @PostMapping(value = "/addUser")
+    @PostMapping
+    @PreAuthorize("hasAuthority('usersadd')")
     public JsonResult save(@RequestBody SysUser sysUser) {
         int flag = sysUserService.save(sysUser);
         if (flag > 0) {
@@ -114,6 +119,7 @@ public class SysUserController {
      * 根据用户id删除用户
      */
     @DeleteMapping(value = "/{id}")
+    @PreAuthorize("hasAuthority('usersdelete')")
     public JsonResult delete(@PathVariable Integer id) {
         int flag = sysUserService.deleteById(id);
         if (flag > 0) {
@@ -127,6 +133,7 @@ public class SysUserController {
      * 修改用户信息
      */
     @PutMapping
+    @PreAuthorize("hasAuthority('usersupdate')")
     public JsonResult updateUser(@RequestBody SysUser sysUser) {
         int flag = sysUserService.updateById(sysUser);
         if (flag > 0) {
@@ -140,6 +147,7 @@ public class SysUserController {
      * 根据用户id获取用户信息
      */
     @GetMapping(value = "/{id}")
+    @PreAuthorize("hasAuthority('usersupdate')")
     public JsonResult getById(@PathVariable Integer id) {
         SysUser getObj = sysUserService.getById(id);
         return new JsonResult(EnumReturnCode.SUCCESS_INFO_GET, getObj);
@@ -152,6 +160,7 @@ public class SysUserController {
      * @return
      */
     @PutMapping(value = "/password")
+    @PreAuthorize("hasAuthority('userspassword')")
     public JsonResult updateUserPwd(@RequestBody SysPwd sysPwd) {
         int flag = sysUserService.updateUserPwd(sysPwd);
         if (flag > 0) {

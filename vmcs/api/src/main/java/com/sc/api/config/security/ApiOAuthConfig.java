@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -35,6 +36,8 @@ public class ApiOAuthConfig {
         private ConsumterAccessDeniedHandler ConsumterAccessDeniedHandler;
         @Autowired
         private ConsumterAuthenticationEntryPoint consumterAuthenticationEntryPoint;
+        @Autowired
+        private ConsumterExpressionHandler consumterExpressionHandler;
 
         @Override
         public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
@@ -54,6 +57,7 @@ public class ApiOAuthConfig {
         public void configure(HttpSecurity http) throws Exception {
             http.authorizeRequests().antMatchers("/login/login").permitAll();
             http.authorizeRequests().antMatchers("/login/logout").authenticated();
+            http.authorizeRequests().anyRequest().authenticated();
         }
 
     }

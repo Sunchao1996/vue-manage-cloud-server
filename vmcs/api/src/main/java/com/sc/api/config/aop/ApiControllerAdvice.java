@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.util.Arrays;
 import java.util.Enumeration;
 
@@ -69,6 +71,9 @@ public class ApiControllerAdvice extends HandlerInterceptorAdapter {
     @ResponseBody
     @Order(0)
     public String defaultErrorHandler(HttpServletRequest request, HttpServletResponse response, Exception e) throws Exception {
+        if (e instanceof AccessDeniedException) {
+            throw e;
+        }
         logger.error("系统异常", e);
         logException(request, e);
         JsonResult jsonResult = new JsonResult(EnumReturnCode.FAIL_ERROR);

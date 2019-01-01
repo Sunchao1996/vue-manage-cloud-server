@@ -8,9 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @ComponentScan("com.sc")
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class ApiApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(ApiApplication.class, args);
 	}

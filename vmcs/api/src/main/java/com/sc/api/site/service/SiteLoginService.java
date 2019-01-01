@@ -58,16 +58,6 @@ public class SiteLoginService {
             roles.append("@");
             roleName.append(roleTemp.getRoleName());
             roleName.append("@");
-            //获取所有资源
-            List<SysResource> resourceList = sysRoleResourceDao.listResourcesByRoleId(roleTemp.getId());
-            for (SysResource resourceTemp : resourceList) {
-                resources.append(resourceTemp.getResourceCode());
-                resources.append("@");
-                if (StringUtil.isNotNullOrEmpty(resourceTemp.getResourceManagerUrl())) {
-                    manageUrl.append(resourceTemp.getResourceManagerUrl());
-                    manageUrl.append("@");
-                }
-            }
         }
         webSession.setRoleName(roleName.toString());
         webSession.setRoles(roles.toString().split("@"));

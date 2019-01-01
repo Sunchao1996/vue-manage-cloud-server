@@ -3,6 +3,7 @@ package com.sc.api.config.security;
 import com.sc.util.code.EnumReturnCode;
 import com.sc.util.json.JsonResult;
 import com.sc.util.json.JsonUtil;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;

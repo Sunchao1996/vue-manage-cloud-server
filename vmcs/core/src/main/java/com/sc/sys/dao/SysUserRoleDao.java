@@ -25,9 +25,12 @@ public class SysUserRoleDao extends BaseDao<SysUsersRoles, SysUsersRoles> {
      * 根据用户id获取所有角色
      */
     public List<SysRole> listRolesByUserId(Integer userId) {
-        String sql = "select " + ROLE_BASE_FIELD + " from td_sys_roles role,td_sys_users_roles ur where ur.userId=? and ur.roleId=role.id and role.roleStatus=0";
+//        String sql = "select " + ROLE_BASE_FIELD + " from td_sys_roles role,td_sys_users_roles ur where ur.userId=? and ur.roleId=role.id and role.roleStatus=0";
+        String sql = "select "+ROLE_BASE_FIELD+" from td_sys_roles role where role.roleStatus=0 and role.id in " +
+                "(select roleId from td_sys_roles_group where groupRoleId in (select roleId from td_sys_users_roles  ur where userId=?))";
         return jdbcTemplate.query(sql, new Object[]{userId}, BeanPropertyRowMapper.newInstance(SysRole.class));
     }
+
 
     /**
      * 根据用户id删除角色对应关系
