@@ -57,7 +57,8 @@ public class ApiOAuthConfig {
         public void configure(HttpSecurity http) throws Exception {
             http.authorizeRequests().antMatchers("/login/login").permitAll();
             http.authorizeRequests().antMatchers("/login/logout").authenticated();
-            http.authorizeRequests().anyRequest().authenticated();
+            http.authorizeRequests().anyRequest().authenticated() ;
+            http.csrf().disable();
         }
 
     }

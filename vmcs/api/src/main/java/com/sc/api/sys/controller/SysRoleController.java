@@ -72,13 +72,10 @@ public class SysRoleController  {
     /**
      * 根据id删除
      */
-    @DeleteMapping
+    @DeleteMapping("/{roleId}")
     @PreAuthorize("hasAuthority('rolesdelete')")
-    public JsonResult delete(@RequestBody Map<String, String> paramsMap) {
-        if (paramsMap == null || paramsMap.get("roleId") == null) {
-            return new JsonResult(EnumReturnCode.FAIL_ARGS);
-        }
-        int flag = sysRoleService.deleteById(Integer.valueOf(paramsMap.get("roleId")));
+    public JsonResult delete(@PathVariable Integer roleId) {
+        int flag = sysRoleService.deleteById(roleId);
         if (flag > 0) {
             return new JsonResult(EnumReturnCode.SUCCESS_OPERA);
         } else {
