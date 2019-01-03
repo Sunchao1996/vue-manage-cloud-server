@@ -52,7 +52,7 @@ public class SysUserController {
      */
     @GetMapping
     @PreAuthorize("hasAuthority('users')")
-    public JsonResult list(SysUserSearchVO sysUserSearchVO) {
+    public JsonResult list(  SysUserSearchVO sysUserSearchVO) {
         List<SysUser> list = sysUserService.listBySearch(sysUserSearchVO);
         Integer count = sysUserService.count(sysUserSearchVO);
         PageDto pageDto = new PageDto(sysUserSearchVO.getPageIndex(), count, list);

@@ -56,14 +56,18 @@ public class SysUserService {
      */
     private void addPwd(SysUser sysUser) {
         sysUser.setRandomCode(RandomCodeUtil.createRandomCode(6));
-        Md5SaltUtil md5SaltUtil = new Md5SaltUtil(sysUser.getRandomCode());
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         if (StringUtil.isNullOrEmpty(sysUser.getUserPassword())) {
-            sysUser.setUserPassword(md5SaltUtil.encode("123456"));
+            sysUser.setUserPassword(passwordEncoder.encode("123456"));
         } else {
-            sysUser.setUserPassword(md5SaltUtil.encode(sysUser.getUserPassword()));
+            sysUser.setUserPassword(passwordEncoder.encode(sysUser.getUserPassword()));
         }
     }
 
+    public static void main(String[] args) {
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        System.out.println(passwordEncoder.encode("Sys123"));
+    }
     /**
      * 填充用户头像地址，并上传头像
      */
@@ -159,7 +163,7 @@ public class SysUserService {
      * 根据id查询
      */
     public SysUser getById(Integer id) {
-        List<SysRole> roleList = sysUserRoleDao.listRolesByUserId(id);
+        List<SysRole> roleList = sysUserRoleDao.listGroupRolesByUserId(id);
         StringBuffer roles = new StringBuffer();
         for (SysRole role : roleList) {
             roles.append(role.getId());
@@ -209,15 +213,11 @@ public class SysUserService {
     public boolean checkPass(SysUser sysUser, String inputPassword) {
         String password = sysUser.getUserPassword();
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        return passwordEncoder.matches(inputPassword,password);
+        return passwordEncoder.matches(inputPassword, password);
 //        Md5SaltUtil md5SaltUtil = new Md5SaltUtil(sysUser.getRandomCode());
 //        return md5SaltUtil.isPasswordValid(sysUser.getUserPassword(), inputPassword);
     }
 
-    public static void main(String[] args) {
-        Md5SaltUtil md5SaltUtil = new Md5SaltUtil("@@@@@");
-        System.out.println(md5SaltUtil.encode("123456"));
-    }
 
     /**
      * 根据id重置密码为123456
@@ -233,10 +233,9 @@ public class SysUserService {
         if (sysUser == null) {
             return -1;
         }
-        String random = RandomCodeUtil.createRandomCode(6);
-        Md5SaltUtil md5SaltUtil = new Md5SaltUtil(random);
-        String pwd = md5SaltUtil.encode("123456");
-        return sysUserDao.updateResetPwd(userId, pwd, random);
+        sysUser.setUserPassword("");
+        addPwd(sysUser);
+        return sysUserDao.updateResetPwd(userId, sysUser.getUserPassword(), sysUser.getRandomCode());
     }
 
     /**
@@ -254,8 +253,8 @@ public class SysUserService {
             return -1;
         }
         SysUser sysUser = sysUserDao.getByUserName(sysPwd.getUserName());
-        Md5SaltUtil md5SaltUtil = new Md5SaltUtil(sysUser.getRandomCode());
-        if (sysUser.getUserPassword().equals(md5SaltUtil.encode(sysPwd.getUserPwd()))) {
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+        if (bCryptPasswordEncoder.matches(sysPwd.getUserPwd(),sysUser.getUserPassword())) {
             sysUser.setUserPassword(sysPwd.getNewUserPwd());
             addPwd(sysUser);
             return sysUserDao.updateResetPwd(sysUser.getId(), sysUser.getUserPassword(), sysUser.getRandomCode());

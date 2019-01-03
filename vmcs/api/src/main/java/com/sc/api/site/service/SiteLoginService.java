@@ -47,6 +47,18 @@ public class SiteLoginService {
         webSession.setStatus(String.valueOf(sysUser.getUserStatus()));
         webSession.setUser(sysUser.getUserName());
         webSession.setUserRealName(sysUser.getUserRealName());
+        //获取该用户角色组角色
+        List<SysRole> groupRoleList = sysUserRoleDao.listGroupRolesByUserId(sysUser.getId());
+        StringBuffer groupRoles = new StringBuffer();
+        StringBuffer groupRolesName = new StringBuffer();
+        for (SysRole sysRole : groupRoleList) {
+            groupRoles.append(sysRole.getRoleCode());
+            groupRoles.append("@");
+            groupRolesName.append(sysRole.getRoleName());
+            groupRolesName.append("@");
+        }
+        webSession.setGroupRoles(groupRoles.toString().split("@"));
+        webSession.setGroupRolesName(groupRolesName.toString());
         //获取所有角色
         List<SysRole> roleList = sysUserRoleDao.listRolesByUserId(sysUser.getId());
         StringBuffer roles = new StringBuffer();

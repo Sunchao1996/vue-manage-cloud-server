@@ -21,6 +21,7 @@ public class GlobalFilter {
     public FilterRegistrationBean logBodyFilter() {
         FilterRegistrationBean registration = new FilterRegistrationBean();
         registration.setFilter(new HttpServletRequestReplacedFilter());
+        registration.addUrlPatterns("/**");
         registration.addInitParameter("paramName", "paramValue");
         registration.setName("consumerRequestFilter");
         registration.setOrder(-2147483648);

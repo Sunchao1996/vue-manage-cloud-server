@@ -38,6 +38,24 @@ public class WebSession implements Serializable, UserDetails, Principal {
     private String manageUrl;//用来校验是否允许访问这个请求地址
     private String userRealName;//页面上显示的用户真实姓名
     private String roleName;//页面上显示的用户角色名称用@分隔
+    private String[] groupRoles;//角色组代码
+    private String groupRolesName;//角色组名称,@分隔离
+
+    public String[] getGroupRoles() {
+        return groupRoles;
+    }
+
+    public void setGroupRoles(String[] groupRoles) {
+        this.groupRoles = groupRoles;
+    }
+
+    public String getGroupRolesName() {
+        return groupRolesName;
+    }
+
+    public void setGroupRolesName(String groupRolesName) {
+        this.groupRolesName = groupRolesName;
+    }
 
     public WebSession() {
     }
