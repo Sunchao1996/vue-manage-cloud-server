@@ -6,6 +6,7 @@ import com.sc.sys.model.SysResource;
 import com.sc.sys.model.SysRole;
 import com.sc.sys.model.SysRoleGroup;
 import com.sc.sys.model.SysRolesResources;
+import com.sc.sys.vo.SysRoleSearchVO;
 import com.sc.util.string.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -124,5 +125,27 @@ public class SysRoleService {
      */
     public SysRole getByRoleCode(String roleCode) {
         return sysRoleDao.getByRoleCode(roleCode);
+    }
+
+    /**
+     * 根据条件获取角色组数据
+     *
+     * @param sysRoleSearchVO
+     * @return
+     */
+    public List<SysRole> groupList(SysRoleSearchVO sysRoleSearchVO) {
+        List<SysRole> groupList = sysRoleDao.listGroupBySearch(sysRoleSearchVO);
+        for (SysRole sysRole : groupList) {
+            List<SysRole> subRoleList = sysRoleDao.listAllGroupRoles(sysRole.getId());
+            sysRole.setSubRoles(subRoleList);
+        }
+        return groupList;
+    }
+
+    /**
+     * 获取角色组数量
+     */
+    public int countGroupBySearch(SysRoleSearchVO sysRoleSearchVO) {
+        return sysRoleDao.countGroupBySearch(sysRoleSearchVO);
     }
 }

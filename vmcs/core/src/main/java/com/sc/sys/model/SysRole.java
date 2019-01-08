@@ -6,6 +6,7 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * what:  系统角色
@@ -28,5 +29,6 @@ public class SysRole implements Serializable {
      * 1.普通角色 2.角色组
      */
     private Integer roleType;
+    private List<SysRole> subRoles;
 
 }

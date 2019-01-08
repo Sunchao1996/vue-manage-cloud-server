@@ -1,7 +1,9 @@
 package com.sc.api.sys.controller;
 
+import com.sc.common.page.PageDto;
 import com.sc.sys.model.SysRole;
 import com.sc.sys.service.SysRoleService;
+import com.sc.sys.vo.SysRoleSearchVO;
 import com.sc.util.code.EnumReturnCode;
 import com.sc.util.json.JsonResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +25,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/sys/roles")
 @Validated
-public class SysRoleController  {
+public class SysRoleController {
     @Autowired
     private SysRoleService sysRoleService;
 
@@ -38,6 +40,19 @@ public class SysRoleController  {
             list = new ArrayList<>();
         }
         return new JsonResult(EnumReturnCode.SUCCESS_INFO_GET, list);
+    }
+
+    /**
+     * 根据条件查询角色组信息
+     */
+    @GetMapping
+    @PreAuthorize("hasAuthority('roles')")
+    public JsonResult groupList(SysRoleSearchVO sysRoleSearchVO) {
+        List<SysRole> list = sysRoleService.groupList(sysRoleSearchVO);
+        Integer total = sysRoleService.countGroupBySearch(sysRoleSearchVO);
+        PageDto pageDto = new PageDto(sysRoleSearchVO.getPageIndex(), total, sysRoleSearchVO.getPageSize(), list);
+        JsonResult jsonResult = new JsonResult(EnumReturnCode.SUCCESS_INFO_GET, pageDto);
+        return jsonResult;
     }
 
     /**

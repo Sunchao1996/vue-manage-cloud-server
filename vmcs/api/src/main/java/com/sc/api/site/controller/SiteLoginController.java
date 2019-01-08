@@ -35,7 +35,6 @@ import javax.validation.Valid;
 import java.util.*;
 
 /**
- * Created by 孔垂云 on 2017/9/2.
  */
 @RequestMapping("/login")
 @RestController

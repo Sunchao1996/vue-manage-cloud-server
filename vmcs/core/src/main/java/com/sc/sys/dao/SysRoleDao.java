@@ -5,7 +5,10 @@ import com.sc.sys.model.SysRole;
 import com.sc.sys.model.SysRoleGroup;
 import com.sc.sys.model.SysRolesResources;
 import com.sc.sys.vo.SysRoleSearchVO;
+import com.sc.util.page.PageUtil;
+import com.sc.util.string.StringUtil;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
@@ -68,7 +71,7 @@ public class SysRoleDao extends BaseDao<SysRole, SysRoleSearchVO> {
      * 获取角色组所有角色
      */
     public List<SysRole> listAllGroupRoles(Integer roleId) {
-        String sql = "select " + BASE_FIELD + " from td_sys_roles where roleId in (select roleId from t_sys_roles_group where groupRoleId=?)";
+        String sql = "select " + BASE_FIELD + " from td_sys_roles where id in (select roleId from td_sys_roles_group where groupRoleId=?)";
         return list(sql, roleId);
     }
 
@@ -110,11 +113,49 @@ public class SysRoleDao extends BaseDao<SysRole, SysRoleSearchVO> {
         });
         return 1;
     }
+
     /**
      * 删除角色组所有角色
      */
-    public int deleteGroupRole(Integer groupRoleId){
+    public int deleteGroupRole(Integer groupRoleId) {
         String sql = "delete from td_sys_roles_group where groupRoleId=?";
-        return delete(sql,groupRoleId);
+        return delete(sql, groupRoleId);
+    }
+
+    /**
+     * 根据条件查询角色组信息
+     *
+     * @param sysRoleSearchVO
+     * @return
+     */
+    public List<SysRole> listGroupBySearch(SysRoleSearchVO sysRoleSearchVO) {
+        String sql = "select " + BASE_FIELD + " from td_sys_roles where roleType=2 ";
+        sql += createGroupSearch(sysRoleSearchVO);
+        sql = PageUtil.createMysqlPageSql(sql, sysRoleSearchVO.getPageIndex(), sysRoleSearchVO.getPageSize());
+        return list(sql, sysRoleSearchVO);
+    }
+
+    private String createGroupSearch(SysRoleSearchVO sysRoleSearchVO) {
+        String search = "";
+        if (StringUtil.isNotNullOrEmpty(sysRoleSearchVO.getRoleCode())) {
+            search += " and roleCode =:roleCode ";
+        }
+        if (StringUtil.isNotNullOrEmpty(sysRoleSearchVO.getRoleName())) {
+            search += " and roleName like :roleNameLike ";
+        }
+        if (sysRoleSearchVO.getRoleStatus() != null) {
+            search += " and roleStatus =:roleStatus ";
+        }
+        search += " order by createtime desc";
+        return search;
+    }
+
+    /**
+     * 统计角色组数量
+     */
+    public int countGroupBySearch(SysRoleSearchVO sysRoleSearchVO) {
+        String sql = "select count(*) from td_sys_roles where roleType=2 ";
+        sql += createGroupSearch(sysRoleSearchVO);
+        return count(sql,sysRoleSearchVO);
     }
 }
